@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏗️ AdminSeguro2025</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ✅ MENÚ SUPERIOR (oculto al inicio) -->
+  <nav id="main-nav">
+    <div class="container">
+      <h1 class="nav-title">AdminSeguro2025</h1>
+      <div class="nav-links">
+        <button class="nav-btn" data-section="materials">🏠 Inicio</button>
+        <button class="nav-btn" data-section="materials">📦 Materiales</button>
+        <button id="workers-btn" class="nav-btn" data-section="workers">👷 Trabajadores</button>
+
+        <div class="settings-dropdown-container">
+          <button id="settings-btn" class="nav-btn">⚙️ Ajustes</button>
+          <div id="settings-dropdown" class="settings-dropdown">
+            <button class="settings-dropdown-item" data-section="profile">👤 Perfil</button>
+            <button class="settings-dropdown-item" data-section="change-password">🔐 Cambiar contraseña</button>
+            <hr class="settings-dropdown-divider">
+            <button class="settings-dropdown-item danger" onclick="logout()">🚪 Cerrar sesión</button>
+          </div>
+        </div>
+
+        <span id="user-email" class="user-badge"></span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- ✅ SOLO LOGIN AL INICIO -->
+    <section id="auth-section" class="card">
+      <div class="auth-header">
+        <h1>🏗️ AdminSeguro2025</h1>
+        <p class="subtitle">Sistema seguro para gestión de materiales</p>
+      </div>
+
+      <div id="toggle-auth" class="toggle-group">
+        <button type="button" class="toggle-btn active" data-mode="login">Iniciar Sesión</button>
+        <button type="button" class="toggle-btn" data-mode="register">Registrar Trabajador</button>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="login-email">Correo Electrónico</label>
+          <input type="email" id="login-email" name="login-email" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" name="login-password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary">🔐 Ingresar</button>
+      </form>
+
+      <form id="register-form" class="auth-form" style="display: none;">
+        <div class="form-group">
+          <label for="register-email">Correo Electrónico</label>
+          <input type="email" id="register-email" name="register-email" required>
+        </div>
+        <div class="form-group">
+          <label for="register-password">Contraseña</label>
+          <input type="password" id="register-password" name="register-password" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-success">📝 Registrarse</button>
+      </form>
+    </section>
+
+    <!-- ✅ SECCIONES OCULTAS AL INICIO -->
+    <section id="profile-section" class="card" style="display: none;">
+      <h2>👤 Mi Perfil</h2>
+      <div class="profile-grid">
+        <div class="profile-card">
+          <div class="profile-icon">📧</div>
+          <div>
+            <div class="profile-label">Correo electrónico</div>
+            <div class="profile-value" id="profile-email">-</div>
+          </div>
+        </div>
+        <div class="profile-card">
+          <div class="profile-icon">🏷️</div>
+          <div>
+            <div class="profile-label">Rol</div>
+            <div class="profile-value" id="profile-role">-</div>
+          </div>
+        </div>
+        <div class="profile-card">
+          <div class="profile-icon">🚦</div>
+          <div>
+            <div class="profile-label">Estado</div>
+            <div class="profile-value" id="profile-status">-</div>
+          </div>
+        </div>
+        <div class="profile-card">
+          <div class="profile-icon">📅</div>
+          <div>
+            <div class="profile-label">Fecha de registro</div>
+            <div class="profile-value" id="profile-date">-</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="materials-section" class="card" style="display: none;">
+      <div class="section-header">
+        <h2>📦 Gestión de Materiales</h2>
+        <button id="add-material-btn" class="btn btn-primary" 
+                onclick="document.getElementById('add-material-section').style.display='block'">
+          ➕ Agregar Material
+        </button>
+      </div>
+
+      <section id="add-material-section" class="card nested-card" style="display: none;">
+        <h3>➕ Agregar Nuevo Material</h3>
+        <form id="add-material-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="material-name">Nombre</label>
+              <input type="text" id="material-name" required>
+            </div>
+            <div class="form-group">
+              <label for="material-type">Tipo</label>
+              <select id="material-type" required>
+                <option value="">-- Seleccionar --</option>
+                <option value="cemento">Cemento</option>
+                <option value="arena">Arena</option>
+                <option value="ladrillo">Ladrillo</option>
+                <option value="varilla">Varilla</option>
+                <option value="madera">Madera</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="material-quantity">Cantidad</label>
+              <input type="number" id="material-quantity" min="1" required>
+            </div>
+            <div class="form-group">
+              <label for="material-unit">Unidad</label>
+              <select id="material-unit" required>
+                <option value="bolsas">Bolsas</option>
+                <option value="metros">Metros</option>
+                <option value="unidades">Unidades</option>
+                <option value="kilos">Kilos</option>
+                <option value="toneladas">Toneladas</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="material-price">Precio ($)</label>
+              <input type="number" id="material-price" step="0.01" min="0" required>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-success">💾 Guardar Material</button>
+            <button type="button" class="btn btn-outline" 
+                    onclick="document.getElementById('add-material-section').style.display='none'">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <div class="table-container">
+        <table id="materials-table" class="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Precio</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Se carga dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="workers-section" class="card" style="display: none;">
+      <h2>👷 Gestión de Trabajadores</h2>
+      <div class="table-container">
+        <table id="workers-table" class="data-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Estado</th>
+              <th>Registrado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Se carga dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="change-password-section" class="card" style="display: none;">
+      <h2>🔐 Cambiar Contraseña</h2>
+      <form id="change-password-form" class="form-vertical">
+        <div class="form-group">
+          <label for="current-password">Contraseña actual</label>
+          <input type="password" id="current-password" required>
+        </div>
+        <div class="form-group">
+          <label for="new-password">Nueva contraseña</label>
+          <input type="password" id="new-password" minlength="6" required>
+          <div class="password-strength" id="password-strength"></div>
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirmar nueva contraseña</label>
+          <input type="password" id="confirm-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">🔄 Actualizar Contraseña</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- ✅ MODAL DE EDICIÓN -->
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>✏️ Editar Material</h3>
+        <button class="close-btn" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form id="edit-material-form">
+        <input type="hidden" id="edit-material-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-material-name">Nombre</label>
+            <input type="text" id="edit-material-name" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-material-type">Tipo</label>
+            <select id="edit-material-type" required>
+              <option value="cemento">Cemento</option>
+              <option value="arena">Arena</option>
+              <option value="ladrillo">Ladrillo</option>
+              <option value="varilla">Varilla</option>
+              <option value="madera">Madera</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-material-quantity">Cantidad</label>
+            <input type="number" id="edit-material-quantity" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-material-unit">Unidad</label>
+            <select id="edit-material-unit" required>
+              <option value="bolsas">Bolsas</option>
+              <option value="metros">Metros</option>
+              <option value="unidades">Unidades</option>
+              <option value="kilos">Kilos</option>
+              <option value="toneladas">Toneladas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-material-price">Precio ($)</label>
+            <input type="number" id="edit-material-price" step="0.01" min="0" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
+          <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
