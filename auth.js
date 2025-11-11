@@ -1,16 +1,12 @@
 // auth.js
 const bcrypt = require('bcrypt');
 
-const SALT_ROUNDS = 10;
-
-// Hashear una contraseña
 async function hashPassword(password) {
-  return await bcrypt.hash(password, SALT_ROUNDS);
+  return await bcrypt.hash(password, 10);
 }
 
-// Verificar contraseña
-async function verifyPassword(plainPassword, hashedPassword) {
-  return await bcrypt.compare(plainPassword, hashedPassword);
+async function verifyPassword(password, hashed) {
+  return await bcrypt.compare(password, hashed);
 }
 
 module.exports = { hashPassword, verifyPassword };
