@@ -33,7 +33,6 @@
 
   /* Tipografía */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
 * {
@@ -53,8 +52,8 @@ body {
 
 /* ===== CONTENEDORES ===== */
 .container {
-  max-width: 1200px;
   width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-md);
 }
@@ -81,7 +80,7 @@ body {
 }
 
 /* ===== MENÚ SUPERIOR ===== */
-#main-nav {
+.navbar {
   background: var(--primary);
   color: white;
   box-shadow: var(--shadow);
@@ -90,22 +89,38 @@ body {
   z-index: 100;
 }
 
-#main-nav .container {
+.navbar .container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--space-md) var(--space-xl);
 }
 
-.nav-title {
+.navbar-brand {
   font-size: 1.5rem;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
 }
 
-.nav-links {
+/* Menú hamburguesa */
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.navbar-toggle span {
+  width: 25px;
+  height: 3px;
+  background: white;
+  margin: 3px 0;
+  transition: 0.3s;
+}
+
+/* Menú principal */
+.navbar-menu {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -130,11 +145,6 @@ body {
 .nav-btn:focus {
   color: white;
   background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-btn.active {
-  color: white;
-  background: var(--secondary);
 }
 
 .user-badge {
@@ -207,11 +217,11 @@ body {
 h1, h2, h3, h4 {
   font-weight: 700;
   line-height: 1.2;
+  margin-bottom: 0.5rem;
 }
 
 h1 {
   font-size: 2.25rem;
-  margin-bottom: 0.5rem;
   color: var(--primary);
 }
 
@@ -244,6 +254,20 @@ h3 {
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* ===== BIENVENIDA ===== */
+.welcome-content {
+  line-height: 1.7;
+}
+
+.welcome-content ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.welcome-content li {
+  margin-bottom: 0.5rem;
 }
 
 /* ===== AUTENTICACIÓN ===== */
@@ -385,12 +409,14 @@ textarea:focus {
   overflow-x: auto;
   border-radius: var(--radius);
   margin-top: 1rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   background: white;
+  min-width: 600px;
 }
 
 .data-table th {
@@ -458,7 +484,7 @@ textarea:focus {
 /* ===== PERFIL ===== */
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
@@ -628,21 +654,78 @@ textarea:focus {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .nav-title { font-size: 1.25rem; }
-  .nav-links { gap: 0.5rem; }
-  .nav-btn { padding: 0.5rem; font-size: 0.875rem; }
-  .user-badge { font-size: 0.75rem; padding: 0.125rem 0.75rem; }
-  .card { padding: 1.5rem; }
+  .navbar .container {
+    padding: 0.75rem var(--space-md);
+  }
+
+  .navbar-brand {
+    font-size: 1.25rem;
+  }
+
+  .navbar-toggle {
+    display: flex;
+  }
+
+  .navbar-menu {
+    position: fixed;
+    top: 70px;
+    left: -100%;
+    flex-direction: column;
+    background: var(--primary);
+    width: 100%;
+    height: calc(100vh - 70px);
+    padding: 2rem;
+    transition: 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    gap: 1rem;
+  }
+
+  .navbar-menu.show {
+    left: 0;
+  }
+
+  .nav-btn, .user-badge {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .user-badge {
+    background: rgba(255,255,255,0.15);
+    margin-top: 1rem;
+  }
+
+  .card {
+    padding: 1.5rem;
+  }
+
   h1 { font-size: 1.75rem; }
   h2 { font-size: 1.25rem; }
   .form-row { flex-direction: column; }
   .form-actions { flex-direction: column; }
   .profile-grid { grid-template-columns: 1fr; }
+
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #add-material-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
-  #main-nav .container { padding: 0.75rem; }
   .container { padding: 0 0.75rem; }
   .card { padding: 1.25rem; }
-  .modal-content { margin: 0.5rem; width: calc(100% - 1rem); }
+  .modal-content { 
+    margin: 0.5rem; 
+    width: calc(100% - 1rem); 
+  }
+  .data-table {
+    font-size: 0.875rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem 0.5rem;
+  }
 }

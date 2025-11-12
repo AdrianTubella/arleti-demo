@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1762939138555,
+    "email": "admin@arleti-demo.com",
+    "password": "$2b$10$7vgkK5cQlubDFlkzLJu9Eu.ASB2YkWzMuv.hj1SBVIFEIJrAspvK6",
+    "rol": "admin",
+    "activo": 1,
+    "createdAt": "2025-11-12T09:18:58.555Z"
+  }
+]
