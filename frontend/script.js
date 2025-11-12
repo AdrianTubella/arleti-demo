@@ -1,7 +1,30 @@
 // ==================================================
-// 🔐 ESTADO GLOBAL
+// 🔐 ESTADO GLOBAL (SIMULADO)
 // ==================================================
 let currentUser = null;
+
+// Datos simulados (persisten mientras dura la sesión)
+let materiales = JSON.parse(sessionStorage.getItem('materiales')) || [
+  { id: 1, nombre: "Cemento Portland", tipo: "construccion", cantidad: 50, unidad: "bolsa", precio: 12.50 },
+  { id: 2, nombre: "Varilla corrugada", tipo: "estructura", cantidad: 100, unidad: "barra", precio: 8.20 }
+];
+
+let trabajadores = JSON.parse(sessionStorage.getItem('trabajadores')) || [
+  { id: 1, email: "trabajador@empresa.com", activo: false, createdAt: "2024-11-10T10:00:00" },
+  { id: 2, email: "carlos@empresa.com", activo: true, createdAt: "2024-11-09T14:30:00" }
+];
+
+// Usuarios predefinidos (¡solo para demo!)
+const users = [
+  {
+    id: 1,
+    email: "admin@empresa.com",
+    password: "AdminSeguro2025!", // ✅ usa esta contraseña
+    rol: "admin",
+    activo: true,
+    createdAt: "2024-11-01T08:00:00"
+  }
+];
 
 // ==================================================
 // 🚀 INICIALIZACIÓN
@@ -32,15 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDropdown();
   setupPasswordStrength();
 
-  console.log('✅ AdminSeguro2025 iniciado');
+  console.log('✅ AdminSeguro2025 (modo demo) iniciado');
 });
 
 // ==================================================
-// 🎮 NAVEGACIÓN (solo muestra secciones tras login)
+// 🎮 NAVEGACIÓN
 // ==================================================
 function showSection(sectionId) {
   const sections = ['auth', 'profile', 'materials', 'workers', 'change-password'];
-  
   sections.forEach(id => {
     const el = document.getElementById(id + '-section');
     if (el) el.style.display = 'none';
@@ -60,58 +82,57 @@ function showAuth(mode) {
 }
 
 // ==================================================
-// 🔐 AUTENTICACIÓN
+// 🔐 AUTENTICACIÓN (SIMULADA)
 // ==================================================
-document.getElementById('login-form').addEventListener('submit', async (e) => {
+document.getElementById('login-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
   
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
 
-  try {
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+  const user = users.find(u => 
+    u.email === email && 
+    u.password === password &&
+    u.activo
+  );
 
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error || 'Credenciales inválidas');
-
-    onLoginSuccess(data);
-  } catch (err) {
-    alert(`❌ ${err.message}`);
+  if (user) {
+    onLoginSuccess(user);
+    alert('✅ Bienvenido, ' + (user.rol === 'admin' ? 'Administrador' : 'Trabajador'));
+  } else {
+    alert('❌ Credenciales incorrectas o usuario inactivo');
     document.getElementById('login-password').value = '';
   }
 });
 
-document.getElementById('register-form').addEventListener('submit', async (e) => {
+// Registro (solo para trabajadores — simulado)
+document.getElementById('register-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
   
   const email = document.getElementById('register-email').value.trim();
   const password = document.getElementById('register-password').value;
 
-  try {
-    const res = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error || 'Error al registrar');
-
-    alert('✅ ' + data.message);
-    showAuth('login');
-  } catch (err) {
-    alert(`❌ ${err.message}`);
+  if (!email || !password || password.length < 6) {
+    alert('❌ Email y contraseña (mín. 6 caracteres) son obligatorios');
+    return;
   }
+
+  const nuevoId = trabajadores.length ? Math.max(...trabajadores.map(w => w.id)) + 1 : 1;
+  trabajadores.push({
+    id: nuevoId,
+    email: email,
+    activo: false,
+    createdAt: new Date().toISOString()
+  });
+  sessionStorage.setItem('trabajadores', JSON.stringify(trabajadores));
+
+  alert('✅ Registro exitoso. Espera aprobación del administrador.');
+  showAuth('login');
 });
 
 function onLoginSuccess(user) {
   currentUser = user;
+  sessionStorage.setItem('currentUser', JSON.stringify(user));
 
   // Actualizar perfil
   document.getElementById('profile-email').textContent = user.email;
@@ -130,7 +151,7 @@ function onLoginSuccess(user) {
   const workersBtn = document.getElementById('workers-btn');
   if (user.rol === 'admin') {
     workersBtn.style.display = 'inline-flex';
-    showSection('materials'); // Ir a materiales por defecto
+    showSection('materials');
     loadMaterials();
     loadWorkers();
   } else {
@@ -142,6 +163,7 @@ function onLoginSuccess(user) {
 
 function logout() {
   currentUser = null;
+  sessionStorage.removeItem('currentUser');
   document.getElementById('main-nav').style.display = 'none';
   document.getElementById('auth-section').style.display = 'block';
   showAuth('login');
@@ -162,45 +184,40 @@ function formatDate(dateStr) {
 }
 
 // ==================================================
-// 📦 MATERIALES
+// 📦 MATERIALES (SIMULADOS)
 // ==================================================
-async function loadMaterials() {
-  try {
-    const res = await fetch('/api/materiales');
-    const materiales = await res.json();
+function loadMaterials() {
+  const tbody = document.querySelector('#materials-table tbody');
+  if (!tbody) return;
 
-    const tbody = document.querySelector('#materials-table tbody');
-    if (materiales.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="empty-state">
-            <div class="empty-state-icon">📦</div>
-            <p>No hay materiales registrados</p>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = materiales.map(mat => `
+  if (materiales.length === 0) {
+    tbody.innerHTML = `
       <tr>
-        <td>${escapeHtml(mat.nombre)}</td>
-        <td>${mat.tipo.charAt(0).toUpperCase() + mat.tipo.slice(1)}</td>
-        <td>${mat.cantidad}</td>
-        <td>${mat.unidad.charAt(0).toUpperCase() + mat.unidad.slice(1)}</td>
-        <td>$${parseFloat(mat.precio).toFixed(2)}</td>
-        <td class="actions-cell">
-          <button class="action-btn edit-btn" onclick="editMaterial(${mat.id})">✏️ Editar</button>
-          <button class="action-btn delete-btn" onclick="deleteMaterial(${mat.id})">🗑️ Eliminar</button>
+        <td colspan="6" class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <p>No hay materiales registrados</p>
         </td>
       </tr>
-    `).join('');
-  } catch (err) {
-    alert('❌ Error al cargar materiales');
+    `;
+    return;
   }
+
+  tbody.innerHTML = materiales.map(mat => `
+    <tr>
+      <td>${escapeHtml(mat.nombre)}</td>
+      <td>${mat.tipo.charAt(0).toUpperCase() + mat.tipo.slice(1)}</td>
+      <td>${mat.cantidad}</td>
+      <td>${mat.unidad.charAt(0).toUpperCase() + mat.unidad.slice(1)}</td>
+      <td>$${parseFloat(mat.precio).toFixed(2)}</td>
+      <td class="actions-cell">
+        <button class="action-btn edit-btn" onclick="editMaterial(${mat.id})">✏️ Editar</button>
+        <button class="action-btn delete-btn" onclick="deleteMaterial(${mat.id})">🗑️ Eliminar</button>
+      </td>
+    </tr>
+  `).join('');
 }
 
-document.getElementById('add-material-form').addEventListener('submit', async (e) => {
+document.getElementById('add-material-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
   const data = {
@@ -216,58 +233,36 @@ document.getElementById('add-material-form').addEventListener('submit', async (e
     return;
   }
 
-  try {
-    const res = await fetch('/api/materiales', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+  const nuevoId = materiales.length ? Math.max(...materiales.map(m => m.id)) + 1 : 1;
+  materiales.push({ id: nuevoId, ...data });
+  sessionStorage.setItem('materiales', JSON.stringify(materiales));
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Error al guardar');
-    }
-
-    alert('✅ Material agregado');
-    document.getElementById('add-material-form').reset();
-    document.getElementById('add-material-section').style.display = 'none';
-    loadMaterials();
-  } catch (err) {
-    alert(`❌ ${err.message}`);
-  }
+  alert('✅ Material agregado');
+  document.getElementById('add-material-form').reset();
+  document.getElementById('add-material-section')?.style.display = 'none';
+  loadMaterials();
 });
 
 // Edición
-async function editMaterial(id) {
-  if (!id || isNaN(id) || id <= 0) {
-    alert('❌ ID inválido');
-    return;
-  }
+function editMaterial(id) {
+  const mat = materiales.find(m => m.id === id);
+  if (!mat) return;
 
-  try {
-    const res = await fetch(`/api/materiales/${id}`);
-    if (!res.ok) throw new Error('Material no encontrado');
-    
-    const material = await res.json();
-    
-    document.getElementById('edit-material-id').value = material.id;
-    document.getElementById('edit-material-name').value = material.nombre;
-    document.getElementById('edit-material-type').value = material.tipo;
-    document.getElementById('edit-material-quantity').value = material.cantidad;
-    document.getElementById('edit-material-unit').value = material.unidad;
-    document.getElementById('edit-material-price').value = material.precio;
-    
-    document.getElementById('edit-modal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-  } catch (err) {
-    alert(`❌ ${err.message}`);
-  }
+  document.getElementById('edit-material-id').value = mat.id;
+  document.getElementById('edit-material-name').value = mat.nombre;
+  document.getElementById('edit-material-type').value = mat.tipo;
+  document.getElementById('edit-material-quantity').value = mat.cantidad;
+  document.getElementById('edit-material-unit').value = mat.unidad;
+  document.getElementById('edit-material-price').value = mat.precio;
+  
+  document.getElementById('edit-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
-document.getElementById('edit-material-form').addEventListener('submit', async (e) => {
+document.getElementById('edit-material-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
   
-  const id = document.getElementById('edit-material-id').value;
+  const id = parseInt(document.getElementById('edit-material-id').value);
   const data = {
     nombre: document.getElementById('edit-material-name').value.trim(),
     tipo: document.getElementById('edit-material-type').value,
@@ -276,130 +271,86 @@ document.getElementById('edit-material-form').addEventListener('submit', async (
     precio: parseFloat(document.getElementById('edit-material-price').value)
   };
 
-  if (!data.nombre || !data.tipo || !data.cantidad || !data.unidad || !data.precio) {
-    alert('❌ Todos los campos son obligatorios');
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/materiales/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Error al actualizar');
-    }
-
+  const index = materiales.findIndex(m => m.id === id);
+  if (index !== -1) {
+    materiales[index] = { id, ...data };
+    sessionStorage.setItem('materiales', JSON.stringify(materiales));
     alert('✅ Material actualizado');
     closeEditModal();
     loadMaterials();
-  } catch (err) {
-    alert(`❌ ${err.message}`);
   }
 });
 
-async function deleteMaterial(id) {
+function deleteMaterial(id) {
   if (!confirm('⚠️ ¿Eliminar material? No se puede deshacer.')) return;
 
-  try {
-    const res = await fetch(`/api/materiales/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Error al eliminar');
-    alert('✅ Material eliminado');
-    loadMaterials();
-  } catch (err) {
-    alert(`❌ ${err.message}`);
-  }
+  materiales = materiales.filter(m => m.id !== id);
+  sessionStorage.setItem('materiales', JSON.stringify(materiales));
+  
+  alert('✅ Material eliminado');
+  loadMaterials();
 }
 
 // ==================================================
-// 👷 TRABAJADORES (solo admin)
+// 👷 TRABAJADORES (solo admin — simulados)
 // ==================================================
-async function loadWorkers() {
+function loadWorkers() {
   if (!currentUser || currentUser.rol !== 'admin') return;
 
-  try {
-    const res = await fetch('/api/workers');
-    const workers = await res.json();
+  const tbody = document.querySelector('#workers-table tbody');
+  if (!tbody) return;
 
-    const tbody = document.querySelector('#workers-table tbody');
-    if (workers.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="4" class="empty-state">
-            <div class="empty-state-icon">👷</div>
-            <p>No hay trabajadores registrados</p>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = workers.map(w => `
+  if (trabajadores.length === 0) {
+    tbody.innerHTML = `
       <tr>
-        <td>${escapeHtml(w.email)}</td>
-        <td>
-          <span class="status ${w.activo ? 'status-active' : 'status-pending'}">
-            ${w.activo ? '✅ Activo' : '⏳ Pendiente'}
-          </span>
-        </td>
-        <td>${formatDate(w.createdAt)}</td>
-        <td class="actions-cell">
-          ${!w.activo ? `
-            <button class="action-btn btn-success" onclick="approveWorker(${w.id})">✅ Aprobar</button>
-            <button class="action-btn delete-btn" onclick="deleteWorker(${w.id})">🗑️ Eliminar</button>
-          ` : ''}
+        <td colspan="4" class="empty-state">
+          <div class="empty-state-icon">👷</div>
+          <p>No hay trabajadores registrados</p>
         </td>
       </tr>
-    `).join('');
-  } catch (err) {
-    alert('❌ Error al cargar trabajadores');
+    `;
+    return;
   }
+
+  tbody.innerHTML = trabajadores.map(w => `
+    <tr>
+      <td>${escapeHtml(w.email)}</td>
+      <td>
+        <span class="status ${w.activo ? 'status-active' : 'status-pending'}">
+          ${w.activo ? '✅ Activo' : '⏳ Pendiente'}
+        </span>
+      </td>
+      <td>${formatDate(w.createdAt)}</td>
+      <td class="actions-cell">
+        ${!w.activo ? `
+          <button class="action-btn btn-success" onclick="approveWorker(${w.id})">✅ Aprobar</button>
+          <button class="action-btn delete-btn" onclick="deleteWorker(${w.id})">🗑️ Eliminar</button>
+        ` : ''}
+      </td>
+    </tr>
+  `).join('');
 }
 
-async function approveWorker(id) {
+function approveWorker(id) {
   if (!confirm('✅ ¿Aprobar trabajador? Podrá iniciar sesión.')) return;
 
-  try {
-    const res = await fetch(`/api/workers/${id}/approve`, { method: 'PUT' });
-    if (!res.ok) throw new Error('Error al aprobar');
+  const worker = trabajadores.find(w => w.id === id);
+  if (worker) {
+    worker.activo = true;
+    sessionStorage.setItem('trabajadores', JSON.stringify(trabajadores));
     alert('✅ Trabajador aprobado');
     loadWorkers();
-  } catch (err) {
-    alert(`❌ ${err.message}`);
   }
 }
 
-async function deleteWorker(id) {
+function deleteWorker(id) {
   if (!confirm('🗑️ ¿Eliminar trabajador? Se perderán sus datos.')) return;
 
-  try {
-    // Primero obtenemos el email para la API (necesario para DELETE)
-    const workersRes = await fetch('/api/workers');
-    const workers = await workersRes.json();
-    const worker = workers.find(w => w.id === id);
-    
-    if (!worker) throw new Error('Trabajador no encontrado');
-
-    // Eliminar usuario (necesitas esta ruta en server.js - la agrego abajo)
-    const res = await fetch(`/api/workers/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: worker.email })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Error al eliminar');
-    }
-
-    alert('✅ Trabajador eliminado');
-    loadWorkers();
-  } catch (err) {
-    alert(`❌ ${err.message}`);
-  }
+  trabajadores = trabajadores.filter(w => w.id !== id);
+  sessionStorage.setItem('trabajadores', JSON.stringify(trabajadores));
+  
+  alert('✅ Trabajador eliminado');
+  loadWorkers();
 }
 
 // ==================================================
@@ -408,6 +359,8 @@ async function deleteWorker(id) {
 function setupDropdown() {
   const settingsBtn = document.getElementById('settings-btn');
   const dropdown = document.getElementById('settings-dropdown');
+
+  if (!settingsBtn || !dropdown) return;
 
   settingsBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -429,7 +382,8 @@ function setupDropdown() {
 }
 
 function closeEditModal() {
-  document.getElementById('edit-modal').classList.remove('show');
+  const modal = document.getElementById('edit-modal');
+  if (modal) modal.classList.remove('show');
   document.body.style.overflow = '';
 }
 
@@ -459,9 +413,9 @@ function setupPasswordStrength() {
 }
 
 // ==================================================
-// 🔐 CAMBIO DE CONTRASEÑA
+// 🔐 CAMBIO DE CONTRASEÑA (solo actualiza localmente)
 // ==================================================
-document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+document.getElementById('change-password-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
   const current = document.getElementById('current-password').value;
@@ -478,20 +432,15 @@ document.getElementById('change-password-form').addEventListener('submit', async
     return;
   }
 
-  try {
-    const res = await fetch('/api/admin/change-password', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword: current, newPassword })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al cambiar contraseña');
-
-    alert('✅ ' + data.message);
-    document.getElementById('change-password-form').reset();
-    document.getElementById('password-strength').className = 'password-strength';
-  } catch (err) {
-    alert(`❌ ${err.message}`);
+  // Verificar contraseña actual (solo admin por ahora)
+  const admin = users[0];
+  if (current !== admin.password) {
+    alert('❌ Contraseña actual incorrecta');
+    return;
   }
+
+  // Actualizar
+  admin.password = newPassword;
+  alert('✅ Contraseña cambiada. Por seguridad, deberás iniciar sesión nuevamente.');
+  logout();
 });
