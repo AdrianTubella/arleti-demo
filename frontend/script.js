@@ -5,8 +5,8 @@ let currentUser = null;
 
 // Datos simulados (persisten mientras dura la sesión)
 let materiales = JSON.parse(sessionStorage.getItem('materiales')) || [
-  { id: 1, nombre: "Cemento Portland", tipo: "construccion", cantidad: 50, unidad: "bolsa", precio: 12.50 },
-  { id: 2, nombre: "Varilla corrugada", tipo: "estructura", cantidad: 100, unidad: "barra", precio: 8.20 }
+  { id: 1, nombre: "Cemento Portland", tipo: "cemento", cantidad: 50, unidad: "bolsas", precio: 12.50 },
+  { id: 2, nombre: "Varilla corrugada", tipo: "varilla", cantidad: 100, unidad: "unidades", precio: 8.20 }
 ];
 
 let trabajadores = JSON.parse(sessionStorage.getItem('trabajadores')) || [
@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDropdown();
   setupPasswordStrength();
   setupLoginForm();
+  setupMobileMenu();
 
   console.log('✅ AdminSeguro2025 (modo demo) iniciado');
 });
@@ -67,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // 🎮 NAVEGACIÓN
 // ==================================================
 function showSection(sectionId) {
-  const sections = ['auth', 'profile', 'materials', 'workers', 'change-password'];
+  // ✅ Incluye 'home' y 'auth'
+  const sections = ['auth', 'home', 'profile', 'materials', 'workers', 'change-password'];
   sections.forEach(id => {
     const el = document.getElementById(id + '-section');
     if (el) el.style.display = 'none';
@@ -181,12 +183,12 @@ function onLoginSuccess(user) {
   const workersBtn = document.getElementById('workers-btn');
   if (user.rol === 'admin') {
     if (workersBtn) workersBtn.style.display = 'inline-flex';
-    showSection('materials');
+    showSection('home'); // ✅ Empieza en inicio
     loadMaterials();
     loadWorkers();
   } else {
     if (workersBtn) workersBtn.style.display = 'none';
-    showSection('materials');
+    showSection('home'); // ✅ También para trabajadores
     loadMaterials();
   }
 }
@@ -431,6 +433,13 @@ function setupDropdown() {
       closeEditModal();
     }
   });
+
+  // Cerrar dropdown al hacer clic en un ítem (móvil)
+  document.querySelectorAll('.settings-dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      dropdown.classList.remove('show');
+    });
+  });
 }
 
 function closeEditModal() {
@@ -460,6 +469,17 @@ function setupPasswordStrength() {
       }
       
       strengthBar.className = 'password-strength ' + strength;
+    });
+  }
+}
+
+function setupMobileMenu() {
+  const toggle = document.getElementById('nav-toggle');
+  const menu = document.getElementById('nav-menu');
+  
+  if (toggle && menu) {
+    toggle.addEventListener('click', () => {
+      menu.classList.toggle('show');
     });
   }
 }
