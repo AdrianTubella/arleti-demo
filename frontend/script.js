@@ -31,14 +31,18 @@ const users = [
 // ==================================================
 document.addEventListener('DOMContentLoaded', () => {
   // Solo login visible al inicio
-  document.getElementById('main-nav').style.display = 'none';
+  const mainNav = document.getElementById('main-nav');
+  const authSection = document.getElementById('auth-section');
+  if (mainNav) mainNav.style.display = 'none';
+  if (authSection) authSection.style.display = 'block';
   
   // Eventos de navegación
   document.querySelectorAll('[data-section]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       showSection(btn.dataset.section);
-      document.getElementById('settings-dropdown').classList.remove('show');
+      const dropdown = document.getElementById('settings-dropdown');
+      if (dropdown) dropdown.classList.remove('show');
     });
   });
 
@@ -51,9 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Dropdown y modal
+  // Funciones UI
   setupDropdown();
   setupPasswordStrength();
+  setupLoginForm();
 
   console.log('✅ AdminSeguro2025 (modo demo) iniciado');
 });
@@ -77,85 +82,110 @@ function showSection(sectionId) {
 }
 
 function showAuth(mode) {
-  document.getElementById('login-form').style.display = mode === 'login' ? 'block' : 'none';
-  document.getElementById('register-form').style.display = mode === 'register' ? 'block' : 'none';
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  if (loginForm) loginForm.style.display = mode === 'login' ? 'block' : 'none';
+  if (registerForm) registerForm.style.display = mode === 'register' ? 'block' : 'none';
 }
 
 // ==================================================
 // 🔐 AUTENTICACIÓN (SIMULADA)
 // ==================================================
-document.getElementById('login-form')?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
+function setupLoginForm() {
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const emailInput = document.getElementById('login-email');
+      const passwordInput = document.getElementById('login-password');
+      if (!emailInput || !passwordInput) return;
 
-  const user = users.find(u => 
-    u.email === email && 
-    u.password === password &&
-    u.activo
-  );
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
 
-  if (user) {
-    onLoginSuccess(user);
-    alert('✅ Bienvenido, ' + (user.rol === 'admin' ? 'Administrador' : 'Trabajador'));
-  } else {
-    alert('❌ Credenciales incorrectas o usuario inactivo');
-    document.getElementById('login-password').value = '';
-  }
-});
+      const user = users.find(u => 
+        u.email === email && 
+        u.password === password &&
+        u.activo
+      );
 
-// Registro (solo para trabajadores — simulado)
-document.getElementById('register-form')?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  
-  const email = document.getElementById('register-email').value.trim();
-  const password = document.getElementById('register-password').value;
-
-  if (!email || !password || password.length < 6) {
-    alert('❌ Email y contraseña (mín. 6 caracteres) son obligatorios');
-    return;
+      if (user) {
+        onLoginSuccess(user);
+        alert('✅ Bienvenido, ' + (user.rol === 'admin' ? 'Administrador' : 'Trabajador'));
+      } else {
+        alert('❌ Credenciales incorrectas o usuario inactivo');
+        passwordInput.value = '';
+      }
+    });
   }
 
-  const nuevoId = trabajadores.length ? Math.max(...trabajadores.map(w => w.id)) + 1 : 1;
-  trabajadores.push({
-    id: nuevoId,
-    email: email,
-    activo: false,
-    createdAt: new Date().toISOString()
-  });
-  sessionStorage.setItem('trabajadores', JSON.stringify(trabajadores));
+  const registerForm = document.getElementById('register-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const emailInput = document.getElementById('register-email');
+      const passwordInput = document.getElementById('register-password');
+      if (!emailInput || !passwordInput) return;
 
-  alert('✅ Registro exitoso. Espera aprobación del administrador.');
-  showAuth('login');
-});
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password || password.length < 6) {
+        alert('❌ Email y contraseña (mín. 6 caracteres) son obligatorios');
+        return;
+      }
+
+      const nuevoId = trabajadores.length ? Math.max(...trabajadores.map(w => w.id)) + 1 : 1;
+      trabajadores.push({
+        id: nuevoId,
+        email: email,
+        activo: false,
+        createdAt: new Date().toISOString()
+      });
+      sessionStorage.setItem('trabajadores', JSON.stringify(trabajadores));
+
+      alert('✅ Registro exitoso. Espera aprobación del administrador.');
+      showAuth('login');
+    });
+  }
+}
 
 function onLoginSuccess(user) {
   currentUser = user;
   sessionStorage.setItem('currentUser', JSON.stringify(user));
 
   // Actualizar perfil
-  document.getElementById('profile-email').textContent = user.email;
-  document.getElementById('profile-role').textContent = user.rol === 'admin' ? 'Administrador' : 'Trabajador';
-  document.getElementById('profile-status').textContent = user.activo ? 'Activo' : 'Pendiente';
-  document.getElementById('profile-date').textContent = new Date(user.createdAt).toLocaleString('es-ES', {
+  const profileEmail = document.getElementById('profile-email');
+  const profileRole = document.getElementById('profile-role');
+  const profileStatus = document.getElementById('profile-status');
+  const profileDate = document.getElementById('profile-date');
+  const userEmail = document.getElementById('user-email');
+
+  if (profileEmail) profileEmail.textContent = user.email;
+  if (profileRole) profileRole.textContent = user.rol === 'admin' ? 'Administrador' : 'Trabajador';
+  if (profileStatus) profileStatus.textContent = user.activo ? 'Activo' : 'Pendiente';
+  if (profileDate) profileDate.textContent = new Date(user.createdAt).toLocaleString('es-ES', {
     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
   });
+  if (userEmail) userEmail.textContent = user.email;
 
   // Mostrar menú y ocultar login
-  document.getElementById('main-nav').style.display = 'block';
-  document.getElementById('auth-section').style.display = 'none';
-  document.getElementById('user-email').textContent = user.email;
+  const mainNav = document.getElementById('main-nav');
+  const authSection = document.getElementById('auth-section');
+  if (mainNav) mainNav.style.display = 'block';
+  if (authSection) authSection.style.display = 'none';
 
   // Mostrar trabajadores solo si es admin
   const workersBtn = document.getElementById('workers-btn');
   if (user.rol === 'admin') {
-    workersBtn.style.display = 'inline-flex';
+    if (workersBtn) workersBtn.style.display = 'inline-flex';
     showSection('materials');
     loadMaterials();
     loadWorkers();
   } else {
-    workersBtn.style.display = 'none';
+    if (workersBtn) workersBtn.style.display = 'none';
     showSection('materials');
     loadMaterials();
   }
@@ -164,11 +194,18 @@ function onLoginSuccess(user) {
 function logout() {
   currentUser = null;
   sessionStorage.removeItem('currentUser');
-  document.getElementById('main-nav').style.display = 'none';
-  document.getElementById('auth-section').style.display = 'block';
+  
+  const mainNav = document.getElementById('main-nav');
+  const authSection = document.getElementById('auth-section');
+  if (mainNav) mainNav.style.display = 'none';
+  if (authSection) authSection.style.display = 'block';
+  
   showAuth('login');
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-password').value = '';
+  
+  const loginEmail = document.getElementById('login-email');
+  const loginPassword = document.getElementById('login-password');
+  if (loginEmail) loginEmail.value = '';
+  if (loginPassword) loginPassword.value = '';
 }
 
 // ==================================================
@@ -220,26 +257,34 @@ function loadMaterials() {
 document.getElementById('add-material-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  const data = {
-    nombre: document.getElementById('material-name').value.trim(),
-    tipo: document.getElementById('material-type').value,
-    cantidad: parseInt(document.getElementById('material-quantity').value),
-    unidad: document.getElementById('material-unit').value,
-    precio: parseFloat(document.getElementById('material-price').value)
-  };
+  const nombre = document.getElementById('material-name')?.value?.trim();
+  const tipo = document.getElementById('material-type')?.value;
+  const cantidad = document.getElementById('material-quantity')?.value;
+  const unidad = document.getElementById('material-unit')?.value;
+  const precio = document.getElementById('material-price')?.value;
 
-  if (!data.nombre || !data.tipo || !data.cantidad || !data.unidad || !data.precio) {
+  if (!nombre || !tipo || !cantidad || !unidad || !precio) {
     alert('❌ Todos los campos son obligatorios');
     return;
   }
 
   const nuevoId = materiales.length ? Math.max(...materiales.map(m => m.id)) + 1 : 1;
-  materiales.push({ id: nuevoId, ...data });
+  materiales.push({
+    id: nuevoId,
+    nombre,
+    tipo,
+    cantidad: parseInt(cantidad),
+    unidad,
+    precio: parseFloat(precio)
+  });
   sessionStorage.setItem('materiales', JSON.stringify(materiales));
 
   alert('✅ Material agregado');
-  document.getElementById('add-material-form').reset();
-  document.getElementById('add-material-section')?.style.display = 'none';
+  if (document.getElementById('add-material-form')) {
+    document.getElementById('add-material-form').reset();
+  }
+  const addSection = document.getElementById('add-material-section');
+  if (addSection) addSection.style.display = 'none';
   loadMaterials();
 });
 
@@ -255,29 +300,36 @@ function editMaterial(id) {
   document.getElementById('edit-material-unit').value = mat.unidad;
   document.getElementById('edit-material-price').value = mat.precio;
   
-  document.getElementById('edit-modal').classList.add('show');
+  document.getElementById('edit-modal')?.classList.add('show');
   document.body.style.overflow = 'hidden';
 }
 
 document.getElementById('edit-material-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
   
-  const id = parseInt(document.getElementById('edit-material-id').value);
-  const data = {
-    nombre: document.getElementById('edit-material-name').value.trim(),
-    tipo: document.getElementById('edit-material-type').value,
-    cantidad: parseInt(document.getElementById('edit-material-quantity').value),
-    unidad: document.getElementById('edit-material-unit').value,
-    precio: parseFloat(document.getElementById('edit-material-price').value)
-  };
+  const id = parseInt(document.getElementById('edit-material-id')?.value);
+  const nombre = document.getElementById('edit-material-name')?.value?.trim();
+  const tipo = document.getElementById('edit-material-type')?.value;
+  const cantidad = document.getElementById('edit-material-quantity')?.value;
+  const unidad = document.getElementById('edit-material-unit')?.value;
+  const precio = document.getElementById('edit-material-price')?.value;
 
   const index = materiales.findIndex(m => m.id === id);
-  if (index !== -1) {
-    materiales[index] = { id, ...data };
+  if (index !== -1 && nombre && tipo && cantidad && unidad && precio) {
+    materiales[index] = {
+      id,
+      nombre,
+      tipo,
+      cantidad: parseInt(cantidad),
+      unidad,
+      precio: parseFloat(precio)
+    };
     sessionStorage.setItem('materiales', JSON.stringify(materiales));
     alert('✅ Material actualizado');
     closeEditModal();
     loadMaterials();
+  } else {
+    alert('❌ Completa todos los campos');
   }
 });
 
@@ -413,14 +465,14 @@ function setupPasswordStrength() {
 }
 
 // ==================================================
-// 🔐 CAMBIO DE CONTRASEÑA (solo actualiza localmente)
+// 🔐 CAMBIO DE CONTRASEÑA
 // ==================================================
 document.getElementById('change-password-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  const current = document.getElementById('current-password').value;
-  const newPassword = document.getElementById('new-password').value;
-  const confirm = document.getElementById('confirm-password').value;
+  const current = document.getElementById('current-password')?.value;
+  const newPassword = document.getElementById('new-password')?.value;
+  const confirm = document.getElementById('confirm-password')?.value;
 
   if (newPassword !== confirm) {
     alert('❌ Las contraseñas no coinciden');
@@ -432,14 +484,13 @@ document.getElementById('change-password-form')?.addEventListener('submit', (e) 
     return;
   }
 
-  // Verificar contraseña actual (solo admin por ahora)
+  // Solo admin puede cambiar (por ahora)
   const admin = users[0];
   if (current !== admin.password) {
     alert('❌ Contraseña actual incorrecta');
     return;
   }
 
-  // Actualizar
   admin.password = newPassword;
   alert('✅ Contraseña cambiada. Por seguridad, deberás iniciar sesión nuevamente.');
   logout();
